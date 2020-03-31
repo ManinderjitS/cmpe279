@@ -6,7 +6,7 @@
 #include <netinet/in.h> 
 #include <string.h> 
 #include <sys/wait.h>
-#define PORT 8080 
+#define PORT 80
 
 void handle_client_connections(int*, char*, char*);
 
