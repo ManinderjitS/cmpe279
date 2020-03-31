@@ -5,6 +5,7 @@
 #include <stdlib.h> 
 #include <netinet/in.h> 
 #include <string.h> 
+#include <sys/wait.h>
 #define PORT 8080 
 
 void handle_client_connections(int*, char*, char*);
@@ -71,6 +72,12 @@ int main(int argc, char const *argv[])
 	else{
 		perror("Parent");
 		close(new_socket);
+	}
+     
+    int status;
+	// try to wait for any children while there exists at least one
+	while ((forked=waitpid(-1,&status,0))!=-1) {
+	  printf("Process %d terminated\n",forked);
 	}
      
     close(server_fd);
