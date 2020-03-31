@@ -6,6 +6,9 @@
 #include <netinet/in.h> 
 #include <string.h> 
 #define PORT 8080 
+
+void handle_client_connections(int*, char*, char*);
+
 int main(int argc, char const *argv[]) 
 { 
     int server_fd, new_socket, valread; 
@@ -51,9 +54,38 @@ int main(int argc, char const *argv[])
         perror("accept"); 
         exit(EXIT_FAILURE); 
     } 
-    valread = read( new_socket , buffer, 1024); 
-    printf("%s\n",buffer ); 
-    send(new_socket , hello , strlen(hello) , 0 ); 
-    printf("Hello message sent\n"); 
+    
+    int forked = 0;
+    if((forked = fork()) < 0){
+		perror("fork");
+	}
+	
+	if(forked == 0){
+		perror("Child");
+		printf("THe set uid will b set to: %i\n", 1);
+		if(setuid(1)){ //CHange to a non root user
+			perror("Setuid");
+		}
+		handle_client_connections(&new_socket, hello, buffer);
+	}
+	else{
+		perror("Parent");
+		close(new_socket);
+	}
+     
+    close(server_fd);
     return 0; 
 } 
+
+
+void handle_client_connections(int *new_socket, char* hello, char* buffer){
+	int valread;
+	perror("Handle_client_connection");
+	valread = read(*new_socket , buffer, 1024); 
+    printf("%s\n",buffer ); 
+    send(*new_socket , hello , strlen(hello) , 0 ); 
+    printf("Hello message sent\n");
+    if(setuid(0)){
+		perror("Setuid back to root");
+	}
+}
