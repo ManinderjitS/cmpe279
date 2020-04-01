@@ -15,9 +15,12 @@ char* convert_int_to_str(int);
 char *strrev_custom(char *);
 
 int main(int argc, char const *argv[]) 
-{ 
-	if(argc > 1 && argv[1] == "execed"){
+{
+	printf("Main\n"); 
+	
+	if(argc > 1){
 		printf("This is the execed version of the program\n.");
+		printf("THe set uid will b set to: %i\n", 1);
 		
 		if(setuid(1)){ //CHange to a non root user
 			perror("Setuid");
@@ -26,6 +29,7 @@ int main(int argc, char const *argv[])
 		exec_new_sock = convert_str_to_int(argv[2]);
 		
 		handle_client_connections(&exec_new_sock, argv[3]);
+		return 0;
 	}
 	
     int server_fd, new_socket, valread; 
@@ -78,12 +82,13 @@ int main(int argc, char const *argv[])
 	
 	if(forked == 0){
 		perror("Child");
-		printf("THe set uid will b set to: %i\n", 1);
 		
 		char* str_new_sock;
-		
 		str_new_sock = convert_int_to_str(new_socket);
-		char * argv_list[] = {"server","execed", str_new_sock, hello, NULL}; 
+		char * argv_list[] = {"./server","execed", str_new_sock, NULL}; 
+		
+		printf("First arg %s: \n", argv_list[0]);
+		execv(argv_list[0], argv_list);
 		//~ handle_client_connections(&new_socket, hello);
 	}
 	else{
@@ -102,7 +107,8 @@ int main(int argc, char const *argv[])
 } 
 
 
-void handle_client_connections(int *new_socket, const char* hello){
+void handle_client_connections(int *new_socket, const char* hello1){
+	char *hello = "Hello from server"; 
 	int valread;
 	char buffer[1024] = {0}; 
 	perror("Handle_client_connection");
