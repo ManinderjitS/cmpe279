@@ -9,15 +9,13 @@
 #include <string.h>
 #define PORT 80
 
-void handle_client_connections(int*, const char*);
-int convert_str_to_int(const char*);
 char* convert_int_to_str(int);
-char *strrev_custom(char *);
+int convert_str_to_int(const char*);
+void handle_client_connections(int*, const char*);
+char* strrev_custom(char*);
 
 int main(int argc, char const *argv[]) 
 {
-	printf("Main\n"); 
-	
 	if(argc > 1){
 		printf("This is the execed version of the program\n.");
 		printf("THe set uid will b set to: %i\n", 1);
@@ -85,9 +83,16 @@ int main(int argc, char const *argv[])
 		
 		char* str_new_sock;
 		str_new_sock = convert_int_to_str(new_socket);
-		char * argv_list[] = {"./server","execed", str_new_sock, NULL}; 
 		
-		printf("First arg %s: \n", argv_list[0]);
+		char new_hello[strlen(hello)+2];
+		memset(new_hello, 0, strlen(new_hello));
+		
+		char quote_char = '"';
+		strncat(new_hello, &quote_char, 1);
+		strncat(new_hello, hello, strlen(hello));
+		strncat(new_hello, &quote_char, 1);
+		char * argv_list[] = {"./server","execed", str_new_sock, new_hello, NULL}; 
+		
 		execv(argv_list[0], argv_list);
 		//~ handle_client_connections(&new_socket, hello);
 	}
@@ -107,20 +112,37 @@ int main(int argc, char const *argv[])
 } 
 
 
-void handle_client_connections(int *new_socket, const char* hello1){
-	char *hello = "Hello from server"; 
+void handle_client_connections(int *new_socket, const char* hello){
 	int valread;
 	char buffer[1024] = {0}; 
 	perror("Handle_client_connection");
 	valread = read(*new_socket, buffer, 1024); 
     printf("%s\n",buffer ); 
-    send(*new_socket , hello , strlen(hello) , 0 ); 
+    
+    if(hello[0] == '"'){//Remove the quotes
+		int str_len = strlen(hello);
+		char non_quoted_str[str_len - 2];
+		memset(non_quoted_str, 0, str_len);
+		strncpy(non_quoted_str, hello+1, str_len-2);
+		send(*new_socket , non_quoted_str , strlen(non_quoted_str) , 0 ); 
+	}else
+		send(*new_socket , hello , strlen(hello) , 0 ); 
+	
+	
+    
     printf("Hello message sent\n");
     if(setuid(0)){
 		perror("Setuid back to root");
 	}
+	close(*new_socket);
 }
 
+
+/**
+ * Below are helper functions*
+ * 
+ * */
+ 
 int convert_str_to_int(const char *str){
 	int str_len = strlen(str);
 	int result = 0;
@@ -128,8 +150,6 @@ int convert_str_to_int(const char *str){
 	for(int i = 0; i < str_len; i++){
 		result = result * 10 + ( str[i] - '0' );
 	}
-	
-	printf("This is the passed socket fd: %i\n", result);
 	return result;
 }
 
@@ -151,7 +171,6 @@ char* convert_int_to_str(int new_sock){
 	char *rev_str_new_sock = strrev_custom(str_new_sock);	
 	return rev_str_new_sock;
 }
-
 
 char *strrev_custom(char *str){
 	char *p1, *p2;
